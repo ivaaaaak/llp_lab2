@@ -72,8 +72,10 @@ void print_filter(struct query q) {
 void print_query(struct query q) {
     printf("PARSED QUERY: \n\n");
 
-    printf("query type: %s\n", query_type_string[q.type]);
+    printf("query type: %s\n\n", query_type_string[q.type]);
+    print_tab(1);
     printf("var name: %s\n", q.var_name);
+    print_tab(1);
     printf("node label: %s\n\n", q.label);
     
     struct property* prop;
@@ -83,6 +85,7 @@ void print_query(struct query q) {
             prop = q.as_create.prop;
 
             if (prop != NULL) {
+                print_tab(1);
                 printf("properties: \n");
             }
 
