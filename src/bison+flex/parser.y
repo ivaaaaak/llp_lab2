@@ -81,8 +81,8 @@ where_part
 
 conditions
     : condition
-    | condition AND condition {add_logical_operation(&q, $2);}
-    | condition OR condition {add_logical_operation(&q, $2);}
+    | conditions AND condition {set_new_logical_operation(&q, $2);}
+    | conditions OR condition {set_new_logical_operation(&q, $2);}
 
 condition
     : field compare_op value {set_new_filter(&q, $1, $2, $3);}

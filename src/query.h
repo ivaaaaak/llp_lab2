@@ -55,27 +55,35 @@ enum logic_operation_type {
     OR_T
 };
 
+struct logic_operation {
+    enum logic_operation_type operation;
+    struct logic_operation* next_logic_operation;
+};
+
 
 struct filter {
     struct property property;
     enum property_operation prop_op;
-    enum logic_operation_type operation;
     struct filter* next_filter;
 };
 
+struct conditions {
+    struct filter* filter;
+    struct logic_operation* log_op;
+};
 
 struct match_query {
-    struct filter* filter;
+    struct conditions cond;
     char return_value[MAX_STRING_SIZE];
 };
 
 struct delete_query {
-    struct filter* filter;
+    struct conditions cond;
     char delete_value[MAX_STRING_SIZE];
 };
 
 struct set_query {
-    struct filter* filter;
+    struct conditions cond;
     struct property* prop;
 };
 
@@ -106,11 +114,9 @@ struct value create_string(char* value);
 void set_query_type(struct query* q, char *type);
 void set_var_name_and_label(struct query* q, char* var_name, char* label);
 void set_new_property(struct query* q, char* name, struct value value, char* type);
+void set_new_logical_operation(struct query* q, char* oper);
 void set_new_filter(struct query* q, char* name, int operation, struct value value);
-void add_logical_operation(struct query* q, char* oper);
 void set_delete_value(struct query* q, char* name);
 void set_return_value(struct query* q, char* name);
-
-void print_query(struct query q);
 
 #endif

@@ -85,18 +85,24 @@ void set_new_property(struct query* q, char* name, struct value value, char* typ
     }
 }
 
-void add_logical_operation(struct query* q, char* oper) {
-    struct filter* f = q->as_match.filter;
-    if (f != NULL) {
-        while (f->next_filter != NULL) {
-            f = f->next_filter;
-        }
-    }
+void set_new_logical_operation(struct query* q, char* oper) {
+    struct logic_operation* lo = malloc(sizeof(struct logic_operation));
+    lo->next_logic_operation = NULL;
 
     if (strcmp(oper, "and") == 0) {
-        f->operation = AND_T;
+        lo->operation = AND_T;
     } else if (strcmp(oper, "or") == 0) {
-        f->operation = OR_T;
+        lo->operation = OR_T;
+    }
+
+    struct logic_operation* l = q->as_match.cond.log_op;
+    if (l != NULL) {
+        while (l->next_logic_operation != NULL) {
+            l = l->next_logic_operation;
+        }
+        l->next_logic_operation = lo;
+    } else {
+        q->as_match.cond.log_op = lo;
     }
 }
 
@@ -125,16 +131,15 @@ void set_new_filter(struct query* q, char* name, int operation, struct value val
     strcpy(new_f->property.name, name);
     new_f->property.value = value;
     new_f->next_filter = NULL;
-    new_f->operation = NO_T;
     
-    struct filter* f = q->as_match.filter;
+    struct filter* f = q->as_match.cond.filter;
     if (f != NULL) {
         while (f->next_filter != NULL) {
             f = f->next_filter;
         }
         f->next_filter = new_f;
     } else {
-        q->as_match.filter = new_f;
+        q->as_match.cond.filter = new_f;
     }
 }
 

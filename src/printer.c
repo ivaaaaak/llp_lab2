@@ -38,34 +38,85 @@ void print_value(struct property* prop) {
     }
 }
 
-void print_filter(struct query q) {
-    struct filter* filter = q.as_match.filter;
-            
+void print_filter(int tab_num, struct filter* filter) {
+    print_tab(tab_num);
+    printf("field name: %s\n", filter->property.name);
+
+    print_tab(tab_num);
+    printf("operation: %s\n", property_operation_string[filter->prop_op]);
+
+    print_tab(tab_num);
+    print_value(&(filter->property));
+}
+
+
+void print_conditions(struct query q) {
+    struct filter* filter = q.as_match.cond.filter;
+    struct logic_operation* prev_log_op = NULL;
+    struct logic_operation* next_log_op = q.as_match.cond.log_op;
+
     if (filter) {
-        printf("where conditions:\n");
+        printf("where conditions:\n\n");
     }
 
     while (filter != NULL) {
-        if (filter->operation == AND_T) {
-            print_tab(1);
-            printf("AND\n");
-        } else if (filter->operation == OR_T) {
-            print_tab(1);
-            printf("OR\n");
+
+        if (prev_log_op == NULL && next_log_op == NULL) {
+            print_filter(1, filter);
+            break;
+
+        } else if (prev_log_op == NULL) {
+
+            if (next_log_op->operation == AND_T) {
+                print_filter(3, filter);
+
+                print_tab(2);
+                printf("AND\n");
+
+            } else if (next_log_op->operation == OR_T) {
+                print_filter(2, filter);
+
+                print_tab(1);
+                printf("OR\n");
+            }
+
+        } else if (next_log_op == NULL) {
+
+            if (prev_log_op->operation == AND_T) {
+                print_filter(3, filter);
+            } else if (prev_log_op->operation == OR_T) {
+                print_filter(2, filter);
+            }
+            break;
+
+        } else {
+
+            if (prev_log_op->operation == AND_T && next_log_op->operation == AND_T) {
+                print_filter(3, filter);
+                print_tab(2);
+                printf("AND\n");
+
+            } else if (prev_log_op->operation == OR_T && next_log_op->operation == OR_T) {
+                print_filter(2, filter);
+                print_tab(1);
+                printf("OR\n");
+
+            } else if (prev_log_op->operation == AND_T && next_log_op->operation == OR_T) {
+                print_filter(3, filter);
+                print_tab(1);
+                printf("OR\n");
+
+            } else if (prev_log_op->operation == OR_T && next_log_op->operation == AND_T) {
+                print_filter(3, filter);
+                print_tab(2);
+                printf("AND\n");
+            }
         }
-
-        print_tab(2);
-        printf("field name: %s\n", filter->property.name);
-
-        print_tab(2);
-        printf("operation: %s\n", property_operation_string[filter->prop_op]);
-
-        print_tab(2);
-        print_value(&(filter->property));
-
+        
         filter = filter->next_filter;
+        prev_log_op = next_log_op;
+        next_log_op = next_log_op->next_logic_operation;
     }
-
 }
 
 
@@ -101,13 +152,13 @@ void print_query(struct query q) {
             break;
 
         case MATCH_T:
-            print_filter(q);
-            printf("return value: %s", q.as_match.return_value);
+            print_conditions(q);
+            printf("return value: %s\n", q.as_match.return_value);
             break;
 
         case SET_T:
-            print_filter(q);
-            printf("changed properties:\n");
+            print_conditions(q);
+            printf("changed properties:\n\n");
             prop = q.as_set.prop;
 
             while(prop != NULL) {
@@ -122,7 +173,7 @@ void print_query(struct query q) {
             break;
 
         case DELETE_T:
-            print_filter(q);
+            print_conditions(q);
             printf("deleted: %s\n", q.as_delete.delete_value);
             break;
     }
